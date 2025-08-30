@@ -1,47 +1,32 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import Container from '@/components/Container.astro'
 import Link from '@/components/Link.astro'
 import PageHead from '@/components/PageHead.astro'
-import ProjectCard from '@/components/ProjectCard.astro'
+import { SITE } from '@/consts'
+import { Image } from 'astro:assets'
 import Layout from '@/layouts/Layout.astro'
-import { getAllProjects } from '@/lib/data-utils'
-
-const projects = await getAllProjects()
+import logo from '../../public/static/logo.png'
 ---
 
-<Layout class="max-w-3xl">
+<Layout title="| About" description={SITE.description}>
   <PageHead slot="head" title="About" />
-  <Breadcrumbs items={[{ label: 'About', icon: 'lucide:info' }]} />
+  <Container class="flex flex-col gap-y-6">
+    <Breadcrumbs items={[{ label: 'About', icon: 'lucide:info' }]} />
 
-  <section>
-    <div class="min-w-full">
-      <div class="prose mb-8">
-        <p class="mt-0">
-          astro-erudite is an opinionated, unstyled static blogging template
-          that prioritizes simplicity and performance, built with <Link
-            href="https://astro.build"
-            external
-            underline>Astro</Link
-          >, <Link href="https://tailwindcss.com" external underline
-            >Tailwind</Link
-          >, and <Link href="https://ui.shadcn.com" external underline
-            >shadcn/ui</Link
-          >. It provides a clean foundation for your content while being
-          extremely easy to customize.
+    <section>
+      <div class="min-w-full">
+        <h1 class="mb-4 text-3xl font-bold"><Image src={logo} alt="Logo" class="size-12 float-left mr-4 rounded-sm" />About Me</h1>
+        <p class="prose prose-neutral mb-8 dark:prose-invert">
+          Hey, I'm <b>tlsbollei</b>. I currently work as a Red Teamer at <Link href="https://fortinet.com" external>Fortinet</Link>, and at the age of 16, I'm pursuing secondary education at <Link href="https://gymholl.edupage.org" external>Gymnazium Jana Holleho</Link> . 
         </p>
-        <p>
-          To learn more about the philosophy behind this template, check out the
-          following blog post: <Link
-            href="/blog/the-state-of-static-blogs"
-            underline>The State of Static Blogs in 2024</Link
-          >.
+        <p class="prose prose-neutral mb-8 dark:prose-invert">
+          As far as CTFs go, I represent my country, Slovakia, and consistently play with them as part of <Link href="https://ctftime.org/team/197247/" external>Slovak Cyber Team</Link>. Professionaly, I work as a Red Teamer, and I conduct persistent assesments on digital infrastructures, focusing on the Active Directory structure and the Windows enviroment.
+        </p>
+        <p class="prose prose-neutral mb-8 dark:prose-invert">
+          Outside of that, I develop custom malware loaders, deep-dive into windows internals, and my main focus lies in enterprise EDR evasion. More about me and my achievements, right <Link href="https://tlsbollei.vercel.app/about" external>here</Link>.
         </p>
       </div>
-
-      <h2 class="mb-4 text-2xl font-medium">Example Projects Listing</h2>
-      <div class="flex flex-col gap-4">
-        {projects.map((project) => <ProjectCard project={project} />)}
-      </div>
-    </div>
-  </section>
+    </section>
+  </Container>
 </Layout>
