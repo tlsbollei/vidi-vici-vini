@@ -431,7 +431,7 @@ def fun4(y, mod):
 ```
 
 `fun4`, modular inverse via extended Euclid. The decomp stores variables as (a,b,c,d) and shuffles them each loop, that’s just the same extended GCD state machine.
-In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like << very_fun(17) are just << 1. Tests like arg1 & very_fun(17) are just arg1 & 1. This is a common obfuscation trick to hide obvious bit operations behind a function call.
+In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like `<< very_fun(17)` are just `<< 1`. Tests like arg1 & very_fun(17) are just arg1 & 1. This is a common obfuscation trick to hide obvious bit operations behind a function call.
 
 After fuckingfinally unmasking the high-level structure, this is what’s going on :
 
