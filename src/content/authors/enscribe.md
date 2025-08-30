@@ -1,10 +1,10 @@
 ---
-name: 'enscribe'
+name: 'tlsbollei'
 pronouns: 'he/him'
-avatar: 'https://gravatar.com/avatar/9bfdc4ec972793cf05cb91efce5f4aaaec2a0da1bf4ec34dad0913f1d845faf6.webp?size=256'
-bio: 'd(-_-)b'
-website: 'https://enscribe.dev'
-twitter: 'https://twitter.com/enscry'
-github: 'https://github.com/jktrn'
-mail: 'jason@enscribe.dev'
+avatar: 'https://gravatar.com/avatar/c569a6f429c6e4986c14a1703e85ed2e777ef76d42c6553d585f4cac50319e3dv=1756570177000&size=256&d=initials'
+bio: 'infecting'
+website: 'https://tlsbollei.vercel.app/about'
+twitter: 'https://x.com/bol1ktls'
+github: 'https://github.com/tlsbollei'
+mail: 'samkobolik@icloud.com'
 ---
