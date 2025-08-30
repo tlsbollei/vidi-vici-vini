@@ -12,7 +12,7 @@ import Callout from '@/components/Callout.astro'
 Recently we ([Slovak Cyber Team](https://cyberteam.sk/)), ([Czech Cyber Team](https://ctftime.org/team/65727/)) and ([The Few Chosen](https://ctftime.org/team/140885/)) got together for a week long international training bootcamp in preparation for the European Cybersecurity Challenge (ECSC), where we lost our minds over HITCON CTF. An inhumane amount of caffeine, beer (milk for me :[) and a dangerously small amount of sleep, we managed to solve a bunch of pretty hard challenges and even first blood one of them. Huge props to TFC, very cool people! Let's get into it :3 
 Unfortunately we didn't win. Below are the challenges I solved and my thoughts/writeups on them :3 
 
-## rev/crypto - Sharing is Caring
+## rev/crypto - sharing is caring
 > It's just compiled python... right?
 > 
 >
@@ -238,9 +238,7 @@ Did you notice?  Most importantly, it is way too opaque. Decompiling this compil
 
 The pattern is :
 
-> Start with a rational accumulator
-> For `off = 0 .. m`, add `n[off] / D[off] * state`
-> Update `state *= (arg - off)`
+> Start with a rational accumulator , for `off = 0 .. m`, add `n[off] / D[off] * state` , and update `state *= (arg - off)`
 
 This is the shape of "evaluate a baked in polynomial at integer `arg` using Newton form". In other words, `very_fun(n)` was used to synthesize constants from compressed data.
 I manually fixed the wrong guessy part of `very_fun(i)`, so that its occurences were constant-folded, all so we get a straightforward verifier. I won't talk about fixing decompilation artefacts, that's boring. All that matters is, I managed to fold the constants, and got this final version :
@@ -387,7 +385,9 @@ def fun0(x, y):
     return x
 ```
 
-This, `fun0` is addition implemented via XOR and carry, BINARY_AND, BINARY_XOR, BINARY_LSHIFT -> all signature clues of this within the bytecode, loop until second arg becomes zero. Testing fun0(a,b) == a+b over random input confirms it.
+This, `fun0` is addition implemented via XOR and carry, BINARY_AND, BINARY_XOR, BINARY_LSHIFT -> all signature clues of this within the bytecode, loop until second arg becomes zero. 
+
+Testing `fun0(a,b) == a+b` over random input confirms it.
 
 ```python
 def fun1(a, b):
@@ -431,19 +431,23 @@ def fun4(y, mod):
 ```
 
 `fun4`, modular inverse via extended Euclid. The decomp stores variables as (a,b,c,d) and shuffles them each loop, that’s just the same extended GCD state machine.
-In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like `<< very_fun(17)` are just `<< 1`. Tests like arg1 & very_fun(17) are just arg1 & 1. This is a common obfuscation trick to hide obvious bit operations behind a function call.
 
-After fuckingfinally unmasking the high-level structure, this is what’s going on :
 
-C0 is the modulus for group elements.
-C1 is the modulus for exponents.
-C2 and C3 are two fixed bases in the group.
-T[0] to T[2] are “target bases.”
-There are three fixed rows with triples (key, a_fixed, b_fixed).
-main asks you for three user rows with specific keys, you supply a_user for each, while b_user are not typed—those are constants baked in the binary.
+In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like `<< very_fun(17)` are just `<< 1`. Tests like arg1 & very_fun(17) are just arg1 & 1 . This is a common obfuscation trick to hide obvious bit operations behind a function call.
+
+After fucking `FINALLY` unmasking the high-level structure, this is what’s going on :
+
+`C0` is the modulus for group elements, `C1` is the modulus for exponents.
+
+`C2` and `C3` are two fixed bases in the group.
+
+`T[0]` to `T[2]` are “target bases.”
+
+There are three fixed rows with triples (key, a_fixed, b_fixed). main asks you for three user rows with specific keys, you supply a_user for each, while b_user are not typed—those are constants baked in the binary.
+
 The program validates each of the six rows with a multiplicative identity, then performs a degree-2 interpolation in the exponent ring to compute one final exponent a0, and finally checks pow(C2, a0, C0) == C4.
 
-Concretely, the per-row predicate is `rhs = T0^1 * T1^k * T2^(k^2) (mod C0)` where `k`, `k^2` are taken modulo `C1`, compute `lhs = C2^a * C3^b (mod C0)` and finally accept the row if `lhs == rhs`
+Concretely, the per-row predicate is `rhs = T0^1 * T1^k * T2^(k^2) (mod C0)` where `k`, `k^2` are taken modulo `C1`, compute `lhs = C2^a * C3^b (mod C0)` and finally accept the row if `lhs == rhs`.
 
 Here is the direct python equivalent I created and worked with :
 
@@ -470,10 +474,13 @@ Builds a mapping vals[key] = (a, b) from:
         the three fixed rows,
         and your three user rows (overwriting any duplicates if keys overlap).
 
-Checks the mapping has exactly six distinct keys. If not, kill!
-Validates each row with the per-row multiplicative predicate described above. If any row fails, kill!
+Checks the mapping has exactly six distinct keys. If not, `kill`!
+
+Validates each row with the per-row multiplicative predicate described above. If any row fails, `kill`!
+
 Only if all rows pass, it prepares three (x, y) pairs where x is a key and y is the corresponding a(key). The selection logic is very very quirky, but boils down to “take one of your rows, then two of the fixed rows.”
-Computes Lagrange interpolation at x = 0 in the exponent ring modulo C1. That yields a(0).
+
+Computes Lagrange interpolation at x = 0 in the exponent ring modulo `C1`. That yields `a(0)`.
 
 Final check: `pow(C2, a(0), C0) == C4`
 
@@ -511,19 +518,19 @@ def final_check(pairs):
 
 This took me a while, but once you realize exponents are polynomials of degree at most two (because the right-hand side uses exponents 1, k, k^2 modulo C1), the math is plain modular linear algebra, and as follows :
 
-Build the 3×3 matrix E with rows [1, k, k^2] using the three fixed keys, all entries taken modulo C1.
+Build the 3×3 matrix E with rows `[1, k, k^2]` using the three fixed keys, all entries taken modulo `C1`.
 
-Solve E * u = [a_fixed_1, a_fixed_2, a_fixed_3] (mod C1) to get coefficients u = (u0, u1, u2) of a(k) = u0 + u1*k + u2*k^2 (mod C1).
+Solve `E * u = [a_fixed_1, a_fixed_2, a_fixed_3] (mod C1)` to get coefficients `u = (u0, u1, u2)` of `a(k) = u0 + u1*k + u2*k^2 (mod C1)`.
 
-Solve E * v = [b_fixed_1, b_fixed_2, b_fixed_3] (mod C1) to get b(k).
+Solve `E * v = [b_fixed_1, b_fixed_2, b_fixed_3] (mod C1)` to get `b(k)`.
 
-Evaluate a(k) at the three user keys from main. Those are the three integers you must submit, and our cute flag!
+Evaluate `a(k)` at the three user keys from main. Those are the three integers you must submit, and our cute flag!
 
-All six rows now pass. The program takes one of your rows plus two fixed rows, computes a(0) by Lagrange interpolation in the exponent ring modulo C1, and verifies pow(C2, a(0), C0) == C4.
+All six rows now pass. The program takes one of your rows plus two fixed rows, computes `a(0)` by Lagrange interpolation in the exponent ring modulo `C1`, and verifies `pow(C2, a(0), C0) == C4`.
 
 Below is a minimal solver for coefficient recovery :
 
-```python
+```python title="coefficient_recovery.py"
 def mat_inv_mod_3(E, mod):
     a,b,c = E[0]; d,e,f = E[1]; g,h,i = E[2]
     det = (a*(e*i - f*h) - b*(d*i - f*g) + c*(d*h - e*g)) % mod
@@ -575,4 +582,5 @@ hitcon{Like_I_said_....._sharing_is_cari
 ng_and_caring_is_finding_the_right_share
 _4f63bf95789178799874ddf1c1bd6ad6b6297b}
 ```
+
 
