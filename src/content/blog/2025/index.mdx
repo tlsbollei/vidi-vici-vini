@@ -9,8 +9,9 @@ image: './hitcon.png'
 
 import Callout from '@/components/Callout.astro'
 
-Recently we ([Slovak Cyber Team](https://cyberteam.sk/)), ([Czech Cyber Team](https://ctftime.org/team/65727/)) and ([The Few Chosen](https://ctftime.org/team/140885/)) got together for a week long international training bootcamp in preparation for the European Cybersecurity Challenge (ECSC), where we lost our minds over HITCON CTF. An inhumane amount of caffeine, beer (milk for me :[) and a dangerously small amount of sleep, we managed to solve a bunch of pretty hard challenges and even first blood one of them. Huge props to TFC, very cool people! Let's get into it :3 
-Unfortunately we didn't win. Below are the challenges I solved and my thoughts/writeups on them :3 
+Recently we ([Slovak Cyber Team](https://cyberteam.sk/)), ([Czech Cyber Team](https://ctftime.org/team/65727/)) and ([The Few Chosen](https://ctftime.org/team/140885/)) got together for a week long international training bootcamp in preparation for the European Cybersecurity Challenge (ECSC), where we lost our minds over HITCON CTF. An inhumane amount of caffeine, beer ( milk for me :D ) and a dangerously small amount of sleep, we managed to solve a bunch of pretty hard challenges and even first blood one of them. Huge props to TFC, very cool people!
+
+Unfortunately we didn't win. Below are the challenges I solved and my thoughts/writeups on them :3 Let's get into it :3 
 
 ## rev/crypto - sharing is caring
 > It's just compiled python... right?
@@ -242,9 +243,9 @@ The pattern is :
 
 This is the shape of "evaluate a baked in polynomial at integer `arg` using Newton form". In other words, `very_fun(n)` was used to synthesize constants from compressed data.
 I manually fixed the wrong guessy part of `very_fun(i)`, so that its occurences were constant-folded, all so we get a straightforward verifier. I won't talk about fixing decompilation artefacts, that's boring. All that matters is, I managed to fold the constants, and got this final version :
-'
-(Collapsing for your sanity, long integer lists)
-```python title="reversed.py" collapse={1-127}
+
+
+```python title="reversed.py" 
 C0 = 4144803293417776131310451317495228706499130241044716671850484110288180082374299088166459295448719
 C1 = 2072401646708888065655225658747614353249565120522358335925242055144090041187149544083229647724359
 C2 = 1402769202505631727601810730581776197716350949074282314174097681867464170562021714349605843278664
@@ -433,7 +434,7 @@ def fun4(y, mod):
 `fun4`, modular inverse via extended Euclid. The decomp stores variables as (a,b,c,d) and shuffles them each loop, that’s just the same extended GCD state machine.
 
 
-In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like `<< very_fun(17)` are just `<< 1`. Tests like arg1 & very_fun(17) are just arg1 & 1 . This is a common obfuscation trick to hide obvious bit operations behind a function call.
+In the earliest dump, very_fun(17) returned 1 and very_fun(18) returned 0. All the “weird” shifts like `<< very_fun(17)` are just `<< 1`. Tests like `arg1 & very_fun(17)` are just `arg1 & 1` . This is a common obfuscation trick to hide obvious bit operations behind a function call.
 
 ### Thief unmasked
 
@@ -445,9 +446,9 @@ After fucking `FINALLY` unmasking the high-level structure, this is what’s goi
 
 `T[0]` to `T[2]` are “target bases.”
 
-There are three fixed rows with triples (key, a_fixed, b_fixed). main asks you for three user rows with specific keys, you supply a_user for each, while b_user are not typed—those are constants baked in the binary.
+There are three fixed rows with triples `(key, a_fixed, b_fixed)`. main asks you for three user rows with specific keys, you supply `a_user` for each, while `b_user` are not typed—those are constants baked in the binary.
 
-The program validates each of the six rows with a multiplicative identity, then performs a degree-2 interpolation in the exponent ring to compute one final exponent a0, and finally checks pow(C2, a0, C0) == C4.
+The program validates each of the six rows with a multiplicative identity, then performs a degree-2 interpolation in the exponent ring to compute one final exponent `a0`, and finally checks `pow(C2, a0, C0) == C4`.
 
 Concretely, the per-row predicate is `rhs = T0^1 * T1^k * T2^(k^2) (mod C0)` where `k`, `k^2` are taken modulo `C1`, compute `lhs = C2^a * C3^b (mod C0)` and finally accept the row if `lhs == rhs`.
 
@@ -472,7 +473,7 @@ The three fixed rows give three equations, which are enough to solve for the thr
 
 The big function, `fun5` :
 
-Builds a mapping vals[key] = (a, b) from:
+Builds a mapping `vals[key] = (a, b)` from:
         the three fixed rows,
         and your three user rows (overwriting any duplicates if keys overlap).
 
@@ -480,7 +481,7 @@ Checks the mapping has exactly six distinct keys. If not, `kill`!
 
 Validates each row with the per-row multiplicative predicate described above. If any row fails, `kill`!
 
-Only if all rows pass, it prepares three (x, y) pairs where x is a key and y is the corresponding a(key). The selection logic is very very quirky, but boils down to “take one of your rows, then two of the fixed rows.”
+Only if all rows pass, it prepares three `(x, y)` pairs where `x` is a key and `y` is the corresponding `a(key)`. The selection logic is very very quirky, but boils down to “take one of your rows, then two of the fixed rows.”
 
 Computes Lagrange interpolation at x = 0 in the exponent ring modulo `C1`. That yields `a(0)`.
 
@@ -518,7 +519,7 @@ def final_check(pairs):
     return pow(C2, a0, C0) == C4
 ```
 
-This took me a while, but once you realize exponents are polynomials of degree at most two (because the right-hand side uses exponents 1, k, k^2 modulo C1), the math is plain modular linear algebra, and as follows :
+This took me a while, but once you realize exponents are polynomials of degree at most two (because the right-hand side uses exponents `1, k, k^2 modulo C1`), the math is plain modular linear algebra, and as follows :
 
 Build the 3×3 matrix E with rows `[1, k, k^2]` using the three fixed keys, all entries taken modulo `C1`.
 
@@ -584,6 +585,7 @@ hitcon{Like_I_said_....._sharing_is_cari
 ng_and_caring_is_finding_the_right_share
 _4f63bf95789178799874ddf1c1bd6ad6b6297b}
 ```
+
 
 
 
